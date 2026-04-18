@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Тест СЖО</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+
+  <style>
+    .question-card { opacity: 0; transform: translateY(10px); }
+    .question-card.enter-active { opacity: 1; transform: translateY(0); transition: opacity 0.5s ease, transform 0.5s ease; }
+
+    #left-arrow, #right-arrow {
+      min-height: 200px;
+    }
+
+    .result-card {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .result-card:hover {
+      z-index: 10;
+    }
+
+    .finish-button-animated {
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .finish-button-animated.visible {
+      opacity: 1;
+      transform: translateY(0);
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .custom-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 8px;
+      border-radius: 10px;
+      background: linear-gradient(to right, 
+        rgba(255, 255, 255, 0.3) 0%, 
+        rgba(255, 255, 255, 0.5) 50%, 
+        rgba(255, 255, 255, 0.3) 100%);
+      outline: none;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+    }
+
+    .custom-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: oklch(54.6% 0.245 262.881);
+      cursor: pointer;
+      box-shadow: 0 2px 8px oklch(70.7% 0.165 254.624), 
+                  0 0 0 3px rgba(255, 255, 255, 0.8),
+                  inset 0 1px 2px rgba(255, 255, 255, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .custom-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+      box-shadow: 0 3px 12px oklch(70.7% 0.165 254.624), 
+                  0 0 0 4px rgba(255, 255, 255, 0.9),
+                  inset 0 1px 2px rgba(255, 255, 255, 0.3);
+    }
+
+    .custom-slider::-moz-range-thumb {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: oklch(54.6% 0.245 262.881);
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 2px 8px oklch(70.7% 0.165 254.624), 
+                  0 0 0 3px rgba(255, 255, 255, 0.8),
+                  inset 0 1px 2px rgba(255, 255, 255, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .custom-slider::-moz-range-thumb:hover {
+      transform: scale(1.2);
+      box-shadow: 0 3px 12px oklch(70.7% 0.165 254.624), 
+                  0 0 0 4px rgba(255, 255, 255, 0.9),
+                  inset 0 1px 2px rgba(255, 255, 255, 0.3);
+    }
+
+    .custom-slider::-moz-range-track {
+      height: 8px;
+      border-radius: 10px;
+      background: linear-gradient(to right, 
+        rgba(255, 255, 255, 0.3) 0%, 
+        rgba(255, 255, 255, 0.5) 50%, 
+        rgba(255, 255, 255, 0.3) 100%);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .custom-slider:focus {
+      outline: none;
+    }
+    
+    .custom-slider:focus::-webkit-slider-thumb {
+      box-shadow: 0 3px 12px oklch(42.4% 0.199 265.638), 
+                  0 0 0 4px oklch(88.2% 0.059 254.128),
+                  inset 0 1px 2px rgba(255, 255, 255, 0.3);
+    }
+
+    .custom-slider:focus::-moz-range-thumb {
+      box-shadow: 0 3px 12px oklch(42.4% 0.199 265.638), 
+                  0 0 0 4px oklch(88.2% 0.059 254.128),
+                  inset 0 1px 2px rgba(255, 255, 255, 0.3);
+    }
+  </style>
+</head>
+
+<body class="bg-gradient-to-br from-gray-50 via-blue-100 to-gray-50 min-h-screen text-gray-800">
+  <header class="bg-white shadow-lg p-5">
+    <h1 class="text-xl font-bold bg-blue-700 bg-clip-text text-transparent">Тест смысложизненных ориентаций, СЖО</h1>
+  </header>
+
+  <main id="app" class="max-w-6xl mx-auto p-4">
+
+    <section id="test-screen" class="flex flex-col items-center space-y-6">
+      <div class="w-full flex items-stretch gap-4">
+
+        <button id="left-arrow" class="flex-shrink-0 w-12 flex items-center justify-center text-gray-800 hover:text-gray-950 transform hover:scale-125 rounded-lg transition-all disabled:pointer-events-none self-stretch" aria-label="Предыдущий вопрос">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </button>
+
+        <div id="question-container" class="flex-1 flex flex-col items-center"></div>
+
+        <button id="right-arrow" class="flex-shrink-0 w-12 flex items-center justify-center text-gray-800 hover:text-gray-950 transform hover:scale-125 rounded-lg transition-all disabled:pointer-events-none self-stretch" aria-label="Следующий вопрос">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+        </button>
+
+      </div>
+
+      <div id="progress-dots" class="w-full flex justify-center gap-2 flex-wrap mb-2"></div>
+
+      <div id="finish-button-container" class="mt-2 flex justify-center w-full finish-button-animated">
+        <button id="finish-btn" class="inline-block px-6 py-2 text-lg bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all shadow-lg hover:shadow-xl transform hover:scale-110 font-medium text-lg">
+          Завершить тест
+        </button>
+
+      </div>
+
+    </section>
+
+    <section id="result-screen" class="hidden bg-gray-100 shadow-2xl rounded-3xl p-6 space-y-6">
+
+      <div class="text-center mb-6">
+        <h2 class="text-3xl font-bold text-gray-800 mb-2">Результаты</h2>
+        <div class="w-44 h-1 bg-blue-600 mx-auto rounded-full"></div>
+      </div>
+
+      <div id="results-container" class="space-y-4"></div>
+
+      <div class="flex flex-wrap gap-3 justify-center">
+
+        <button id="retake-btn" class="inline-block px-6 py-2 text-lg bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all shadow-lg hover:shadow-xl transform hover:scale-110 font-medium text-lg">
+          На главную
+        </button>
+
+        <button id="download-btn" class="inline-block px-6 py-2 text-lg bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-all shadow-lg hover:shadow-xl transform hover:scale-110 font-medium text-lg">
+          Скачать JSON
+        </button>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <script>
+    const questions = [
+      { id: 1,  statements: ['Обычно мне очень скучно', 'Обычно я полон энергии'] },
+      { id: 2,  statements: ['Жизнь кажется мне всегда волнующей и захватывающей', 'Жизнь кажется мне совершенно спокойной и рутинной'] },
+      { id: 3,  statements: ['В жизни я не имею определенных целей и намерений', 'В жизни я имею очень ясные цели и намерения'] },
+      { id: 4,  statements: ['Моя жизнь представляется мне крайне бессмысленной и бесцельной', 'Моя жизнь представляется мне вполне осмысленной и целеустремленной'] },
+      { id: 5,  statements: ['Каждый день кажется мне всегда новым и непохожим на другие', 'Каждый день кажется мне совершенно похожим на все другие'] },
+      { id: 6,  statements: ['Когда я уйду на пенсию, я займусь интересными вещами, которыми всегда мечтал заняться', 'Когда я уйду на пенсию, я постараюсь не обременять себя никакими заботами'] },
+      { id: 7,  statements: ['Моя жизнь сложилась именно так, как я мечтал', 'Моя жизнь сложилась совсем не так, как я мечтал'] },
+      { id: 8,  statements: ['Я не добился успехов в осуществлении своих жизненных планов', 'Я осуществил многое из того, что было мною запланировано в жизни'] },
+      { id: 9,  statements: ['Моя жизнь пуста и неинтересна', 'Моя жизнь наполнена интересными делами'] },
+      { id: 10, statements: ['Если бы мне пришлось подводить сегодня итог моей жизни, то я бы сказал, что она была вполне осмысленной', 'Если бы мне пришлось сегодня подводить итог моей жизни, то я бы сказал, что она не имела смысла'] },
+      { id: 11, statements: ['Если бы я мог выбирать, то я бы построил свою жизнь совершенно иначе', 'Если бы я мог выбирать, то я бы прожил жизнь ещё раз так же, как живу сейчас'] },
+      { id: 12, statements: ['Когда я смотрю на окружающий меня мир, он часто приводит меня в растерянность и беспокойство', 'Когда я смотрю на окружающий меня мир, он совсем не вызывает у меня беспокойства и растерянности'] },
+      { id: 13, statements: ['Я человек очень обязательный', 'Я человек совсем не обязательный'] },
+      { id: 14, statements: ['Я полагаю, что человек имеет возможность осуществить свой жизненный выбор по своему желанию', 'Я полагаю, что человек лишен возможности выбирать из-за влияния природных способностей и обстоятельств'] },
+      { id: 15, statements: ['Я определенно могу назвать себя целеустремленным человеком', 'Я не могу назвать себя целеустремленным человеком'] },
+      { id: 16, statements: ['В жизни я ещё не нашёл своего призвания и ясных целей', 'В жизни я нашёл своё призвание и цели'] },
+      { id: 17, statements: ['Мои жизненные взгляды ещё не определились', 'Мои жизненные взгляды вполне определились'] },
+      { id: 18, statements: ['Я считаю, что мне удалось найти призвание и интересные цели в жизни', 'Я едва ли способен найти призвание и интересные цели в жизни'] },
+      { id: 19, statements: ['Моя жизнь в моих руках, и я сам управляю ею', 'Моя жизнь не подвластна мне и она управляется внешними событиями'] },
+      { id: 20, statements: ['Мои повседневные дела приносят мне удовольствие и удовлетворение', 'Мои повседневные дела приносят мне сплошные неприятности и переживания'] }
+    ];
+
+    const ascendingItems = [1, 3, 4, 8, 9, 11, 12, 16, 17];
+
+    const subscales = {
+      'Цели в жизни': [3, 4, 10, 16, 17, 18],
+      'Процесс жизни': [1, 2, 4, 5, 7, 9],
+      'Результативность жизни': [8, 9, 10, 12, 20],
+      'Локус контроля - Я': [1, 15, 16, 19],
+      'Локус контроля - жизнь': [7, 10, 11, 14, 18, 19]
+    };
+
+    const norms = {
+      'Цели в жизни': { mean: (32.90 + 29.38) / 2, sd: (5.92 + 6.24) / 2 },
+      'Процесс жизни': { mean: (31.09 + 28.80) / 2, sd: (4.44 + 6.14) / 2 },
+      'Результативность жизни': { mean: (25.46 + 23.30) / 2, sd: (4.30 + 4.95) / 2 },
+      'Локус контроля - Я': { mean: (21.13 + 18.58) / 2, sd: (3.85 + 4.30) / 2 },
+      'Локус контроля - жизнь': { mean: (30.14 + 28.70) / 2, sd: (5.80 + 6.10) / 2 },
+      'Общий показатель': { mean: (103.10 + 95.76) / 2, sd: (15.03 + 16.54) / 2 }
+    };
+
+    const testScreen = document.getElementById('test-screen');
+    const resultScreen = document.getElementById('result-screen');
+    const progressDots = document.getElementById('progress-dots');
+    const questionContainer = document.getElementById('question-container');
+    const retakeBtn = document.getElementById('retake-btn');
+    const downloadBtn = document.getElementById('download-btn');
+    const resultsContainer = document.getElementById('results-container');
+    const leftArrow = document.getElementById('left-arrow');
+    const rightArrow = document.getElementById('right-arrow');
+    const questionGradient = 'linear-gradient(90deg, white, white)';
+    
+    let currentIndex = 0;
+    let answers = {};
+    let confirmedQuestions = new Set();
+    let isTransitioning = false;
+
+    function updateProgressDots() {
+      progressDots.innerHTML = '';
+      questions.forEach((q, idx) => {
+        const dot = document.createElement('div');
+        
+        let dotClasses = 'w-3 h-3 rounded-full transition-all ';
+        if (idx === currentIndex) {
+          dotClasses += 'bg-blue-600 scale-125';
+        } else if (confirmedQuestions.has(q.id)) {
+          dotClasses += 'bg-gray-500';
+        } else {
+          dotClasses += 'bg-gray-300';
+        }
+        
+        dot.className = dotClasses;
+        progressDots.appendChild(dot);
+      });
+    }
+
+    function updateSideArrows() {
+      const leftArrow = document.getElementById('left-arrow');
+      const rightArrow = document.getElementById('right-arrow');
+      
+      if (currentIndex === 0) {
+        leftArrow.classList.add('opacity-30', 'cursor-not-allowed');
+        leftArrow.disabled = true;
+      } else {
+        leftArrow.classList.remove('opacity-30', 'cursor-not-allowed');
+        leftArrow.disabled = false;
+      }
+      
+      if (currentIndex === questions.length - 1) {
+        rightArrow.classList.add('opacity-30', 'cursor-not-allowed');
+        rightArrow.disabled = true;
+      } else {
+        rightArrow.classList.remove('opacity-30', 'cursor-not-allowed');
+        rightArrow.disabled = false;
+      }
+    }
+
+    function applyGradientToCard(card) {
+      card.style.cssText += `background: ${questionGradient} !important; background-image: ${questionGradient} !important;`;
+    }
+
+    function showQuestion(index) {
+      currentIndex = index;
+      const q = questions[index];
+      questionContainer.innerHTML = '';
+
+      const card = document.createElement('div');
+      card.className = 'question-card w-full rounded-xl shadow-lg p-6 text-gray-800 overflow-hidden';
+      applyGradientToCard(card);
+
+      const title = document.createElement('h3');
+      title.className = 'text-lg font-bold mb-4';
+      title.textContent = `Вопрос ${q.id}`;
+      card.appendChild(title);
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8';
+
+      const left = document.createElement('div');
+      left.className = 'sm:w-1/2';
+      left.textContent = q.statements[0];
+
+      const right = document.createElement('div');
+      right.className = 'sm:w-1/2 sm:text-right';
+      right.textContent = q.statements[1];
+      wrapper.appendChild(left);
+      wrapper.appendChild(right);
+      card.appendChild(wrapper);
+
+      const scaleWrapper = document.createElement('div');
+      const labelsContainer = document.createElement('div');
+      labelsContainer.className = 'flex justify-between mb-2 text-s';
+      ['3','2','1','0','1','2','3'].forEach(txt => {
+        const span = document.createElement('span');
+        span.textContent = txt;
+        labelsContainer.appendChild(span);
+      });
+      scaleWrapper.appendChild(labelsContainer);
+
+      const slider = document.createElement('input');
+      slider.type = 'range';
+      slider.min = 0;
+      slider.max = 6;
+      slider.step = 1;
+      slider.className = 'custom-slider';
+      slider.value = (answers[q.id] !== undefined) ? answers[q.id] : 3;
+
+      function handleAnswer() {
+        if (isTransitioning) return;
+        isTransitioning = true;
+        
+        answers[q.id] = parseInt(slider.value);
+        if (index < questions.length - 1) {
+          confirmedQuestions.add(q.id);
+          setTimeout(() => {
+            nextQuestion();
+            isTransitioning = false;
+          }, 200);
+        } else {
+          updateFinishButton();
+          isTransitioning = false;
+        }
+        updateProgressDots();
+        updateSideArrows();
+      }
+
+      slider.addEventListener('change', handleAnswer);
+      slider.addEventListener('click', handleAnswer);
+
+      scaleWrapper.appendChild(slider);
+      card.appendChild(scaleWrapper);
+      
+      questionContainer.appendChild(card);
+      
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          card.classList.add('enter-active');
+          const cardHeight = card.offsetHeight;
+          const leftArrow = document.getElementById('left-arrow');
+          const rightArrow = document.getElementById('right-arrow');
+          if (leftArrow && rightArrow && cardHeight > 0) {
+            leftArrow.style.minHeight = `${cardHeight}px`;
+            rightArrow.style.minHeight = `${cardHeight}px`;
+          }
+        });
+      });
+      updateFinishButton();
+      updateProgressDots();
+      updateSideArrows();
+    }
+
+    function updateFinishButton() {
+      const finishContainer = document.getElementById('finish-button-container');
+
+      if (!finishContainer) return;
+      const lastQuestionId = questions[questions.length - 1].id;
+      if (currentIndex === questions.length - 1 && answers[lastQuestionId] !== undefined) {
+        finishContainer.classList.add('visible');
+      } else {
+        finishContainer.classList.remove('visible');
+      }
+    }
+
+    document.getElementById('finish-btn').addEventListener('click', () => {
+      showResults();
+      testScreen.classList.add('hidden');
+      resultScreen.classList.remove('hidden');
+    });
+
+    function nextQuestion() {
+      if (currentIndex < questions.length - 1) {
+        showQuestion(currentIndex + 1);
+      } else {
+        showResults();
+        testScreen.classList.add('hidden');
+        resultScreen.classList.remove('hidden');
+      }
+    }
+
+    function prevQuestion() {
+      if (currentIndex > 0) showQuestion(currentIndex - 1);
+    }
+
+    function computeScores() {
+      const scores = {};
+
+      for (const scale in subscales) {
+        scores[scale] = 0;
+      }
+
+      let total = 0;
+
+      questions.forEach(q => {
+        const idx = answers[q.id];
+        if (idx === undefined) return;
+        let value;
+        if (ascendingItems.includes(q.id)) {
+          value = idx + 1;
+        } else {
+          value = 7 - idx;
+        }
+        total += value;
+        for (const scale in subscales) {
+          if (subscales[scale].includes(q.id)) {
+            scores[scale] += value;
+          }
+        }
+      });
+
+      scores['Общий показатель'] = total;
+      return scores;
+    }
+
+    function categorize(score, norm) {
+      const low = norm.mean - norm.sd;
+      const high = norm.mean + norm.sd;
+      if (score < low) return 'Низкий';
+      if (score > high) return 'Высокий';
+      return 'Средний';
+    }
+
+    function showResults() {
+      const scores = computeScores();
+      resultsContainer.innerHTML = '';
+      const orderedScales = [
+        'Цели в жизни',
+        'Процесс жизни',
+        'Результативность жизни',
+        'Локус контроля - Я',
+        'Общий показатель',
+        'Локус контроля - жизнь'
+      ];
+
+      let idx = 0;
+
+      for (const scale of orderedScales) {
+        if (!(scale in scores)) continue;
+        const value = scores[scale];
+        const norm = norms[scale];
+        let category = '';
+        if (norm) category = categorize(value, norm);
+        const item = document.createElement('div');
+
+        const gradient = questionGradient;
+        item.className = 'result-card rounded-3xl shadow-xl p-6 text-gray-800 mb-4 transform transition-all duration-300 hover:scale-110 hover:shadow-2xl';
+        item.style.background = gradient;
+        item.style.backgroundImage = gradient;
+        item.style.cssText += `background: ${gradient} !important; background-image: ${gradient} !important;`;
+        item.style.opacity = '0';
+        item.style.transform = 'translateY(20px)';
+        
+        const title = document.createElement('h4');
+        title.className = 'text-xl font-bold text-gray-800 mb-2';
+        title.textContent = `${scale}: ${value}`;
+        
+        const cat = document.createElement('p');
+        cat.className = 'text-md font-semibold mt-2 mb-2 rounded-full inline-block';
+        if (category) {
+          const categoryColors = {
+            'низкий': 'text-blue-500',
+            'средний': 'text-blue-600',
+            'высокий': 'text-blue-700'
+          };
+          cat.textContent = `Уровень: ${category.toLowerCase()}`;
+          cat.classList.add(categoryColors[category.toLowerCase()]);
+        }
+        
+        item.appendChild(title);
+        item.appendChild(cat);
+        resultsContainer.appendChild(item);
+        
+        setTimeout(() => {
+          item.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+          item.style.opacity = '1';
+          item.style.transform = 'translateY(0)';
+        }, idx * 100);
+        
+        idx++;
+      }
+    }
+
+    function downloadResults() {
+      const scores = computeScores();
+      const dataStr = JSON.stringify(scores, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'sjo_results.json';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+    
+    leftArrow.addEventListener('click', () => {
+      if (currentIndex > 0) {
+        confirmedQuestions.delete(questions[currentIndex].id);
+        prevQuestion();
+      }
+    });
+    
+    rightArrow.addEventListener('click', () => {
+      const currentId = questions[currentIndex].id;
+      if (currentIndex === questions.length - 1) {
+        if (answers[currentId] === undefined) {
+          answers[currentId] = 3;
+        }
+        confirmedQuestions.add(currentId);
+        updateProgressDots();
+        updateSideArrows();
+        updateFinishButton();
+      } else {
+        confirmedQuestions.add(currentId);
+        showQuestion(currentIndex + 1);
+      }
+    });
+    
+    retakeBtn.addEventListener('click', () => {
+      window.location.href = 'index.html';
+    });
+
+    downloadBtn.addEventListener('click', downloadResults);
+    showQuestion(0);
+  </script>
+</body>
+</html>
